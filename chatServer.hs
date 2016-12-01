@@ -53,11 +53,10 @@ messaging addr hdl chan cID mss = do
     let broadcast msg clientID = writeChan chan (msg,clientID)
     commLine <- dupChan chan
     writeChan commLine (mss,cID)
-    a<-0
     reader <- forkIO $ fix $ \loop -> do
         (message,id) <- readChan commLine
         if (id /= cID)
-            then hPutStrLn hdl ("Client" ++ show(id) ++ ":" ++message)>> hFlush hdl
+            then hPutStrLn hdl (message)>> hFlush hdl --"Client" ++ show(id) ++ ":" ++
             else putStrLn "\n"
         loop
     fix $ \loop -> do
@@ -66,11 +65,22 @@ messaging addr hdl chan cID mss = do
         case (sq (extractInfo mess 0 0)) of
             "KILL_SERVICE" -> cls  hdl
             "HELO" -> infoSplit addr hdl
-            "JOIN_CHATROOM" -> putStrLn "you have joined"--(extractInfo mess 0 1)
+            "JOIN_CHATROOM" -> joinRoom mess
             "LEAVE_CHATROOM" -> putStrLn "leaving"
             "CHAT" -> putStrLn "message"
             _ -> putStrLn "keep listening">> loop 
     messaging addr hdl chan cID mss
+
+joinRoom :: String -> IO()
+joinRoom clientM = do
+   let chatName = (sq (extractInfo clientM 0 1))
+   putStrLn chatName
+   let cIP = (sq (extractInfo clientM 1 1))
+   let cPort = (sq (extractInfo clientM 2 1))
+   let cName = (sq (extractInfo clientM 3 1))
+   putStrLn (chatName ++ cIP ++ cPort ++ cName)
+
+
 
 cls:: Handle -> IO ()
 cls hdl = do
@@ -119,3 +129,4 @@ getMessage hdl =do
         then getMessage hdl
         else return mess
 
+--JOIN_CHATROOM: name1\nIP: 1325\nPORT: 34243\nC_NAME: Oisin
