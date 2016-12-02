@@ -62,9 +62,8 @@ messaging addr hdl chan cID mss = do
     fix $ \loop -> do
         mess <- getMessage hdl
         broadcast mess cID
+        --origTests mess hdl
         case (sq (extractInfo mess 0 0)) of
-            "KILL_SERVICE" -> cls  hdl
-            "HELO" -> infoSplit addr hdl
             "JOIN_CHATROOM" -> joinRoom mess
             "LEAVE_CHATROOM" -> putStrLn "leaving"
             "CHAT" -> putStrLn "message"
@@ -80,9 +79,7 @@ joinRoom clientM = do
    let cName = (sq (extractInfo clientM 3 1))
    putStrLn (chatName ++ cIP ++ cPort ++ cName)
 
-
-
-cls:: Handle -> IO ()
+cls:: Handle -> IO()
 cls hdl = do
     hPutStr hdl "gluck"
     hFlush hdl
@@ -90,9 +87,8 @@ cls hdl = do
     exitSuccess
 
 
-infoSplit:: SockAddr -> Handle -> IO()
-infoSplit sa hdl = do
-    let address = (show sa)
+infoSplit:: Handle -> IO()
+infoSplit hdl = do
     let a = splitOn ":" address
     hPutStr hdl ("HELO BASE_TEXT\nIP:" ++ (sq (a !! 0)) ++ "\n" ++ "Port:" ++ (sq (a !! 1)) ++"\n" ++ "StudentID:12312629\n")--(show (a !! 1))
     hFlush hdl
@@ -129,4 +125,12 @@ getMessage hdl =do
         then getMessage hdl
         else return mess
 
+origTests::String -> Handle->IO()
+origTests msg hdl= do
+    let msg1 = words msg
+    case (msg1 !! 0) of
+        "KILL_SERVICE" -> putStrLn "killin' it"
+        "HELO" -> putStrLn infoSplit hdl
+        _ -> putStrLn "keep listening"
 --JOIN_CHATROOM: name1\nIP: 1325\nPORT: 34243\nC_NAME: Oisin
+--"HELO BASE_TEXT\nIP:10.62.0.232\n" ++ "Port:8080\n" ++ "StudentID:12312629\n"
